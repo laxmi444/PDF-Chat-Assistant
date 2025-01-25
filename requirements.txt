@@ -7,13 +7,5 @@ langchain_core
 langchain_groq
 langchain_chromadb
 streamlit
-google-generativeai
+langchain_huggingface
 pymupdf
-arxiv
-wikipedia
-mysql-connector-python
-SQLALchemy
-validators==0.28.1
-youtube_transcript_api
-unstructured
-numexpr
