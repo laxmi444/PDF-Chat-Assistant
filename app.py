@@ -33,7 +33,7 @@ st.write("Upload PDFs and Chat Intelligently!")
 # input groq api key
 api_key=st.text_input("Enter your Groq API Key:",type="password")
 
-# checking if api is provided
+# check if api is provided
 if api_key:
     llm=ChatGroq(model_name="gemma2-9b-it",groq_api_key=api_key)
     
@@ -48,10 +48,10 @@ if api_key:
 
     # process uploaded pdfs
     if uploaded_files:
-        documents=[]
+        documents=[]  #creates an empty list called documents to store the content of all uploaded pdfs
         for uploaded_file in uploaded_files:
             temppdf = f"temp_{uploaded_file.name}"
-            with open(temppdf, "wb") as file:
+            with open(temppdf, "wb") as file: # This part of the code is needed because some tools or libraries (like PyPDFLoader) require a physical file saved on the system to process it. Uploaded files in a web app, like Streamlit, are stored temporarily in memory, but many tools can't directly process files from memory.
                 file.write(uploaded_file.getvalue())
 
             loader=PyPDFLoader(temppdf)
@@ -63,24 +63,24 @@ if api_key:
         text_splitter=RecursiveCharacterTextSplitter(chunk_size=5000, chunk_overlap=500)
         splits=text_splitter.split_documents(documents)
         import chromadb
-        from chromadb.config import Settings
+        from chromadb.config import Settings # Settings: A configuration class used to customize the behavior of the ChromaDB client
 
         # Add this before vectorstore creation
         chroma_client = chromadb.PersistentClient(
             path="./chroma_db", 
-            settings=Settings(allow_reset=True)
+            settings=Settings(allow_reset=True) # allows you to reset the database if needed, which is useful during development or debugging
         )
 
         # Modify Chroma initialization
         vectorstore = Chroma.from_documents(
             documents=splits, 
             embedding=embeddings, 
-            client=chroma_client,  # Add this line
+            client=chroma_client, 
             collection_name="pdf_documents"  # Optional: specify collection name
         )
         retriever=vectorstore.as_retriever()
 
-# prompt
+        # reformulation prompt
         contextualize_q_system_prompt=(
             "Given a chat history and the latest user question"
             "which might reference context in the chat history,"
@@ -97,9 +97,10 @@ if api_key:
             ]
         )
 
+        # retrieval prompt
         history_aware_retriever=create_history_aware_retriever(llm,retriever,contextualize_q_prompt)
 
-        # answer question
+        
         system_prompt=(
             "You are an assistant for question-answering tasks. "
             "Use the following pieces of retrieved context to answer "
@@ -107,10 +108,10 @@ if api_key:
             "don't know. Use three sentences maximum and keep the "
             "answer concise. "
             "\n\n"
-            "{context}"  # Remove the space after {context
+            "{context}"  
 )
 
-
+        # template for question-answering process
         qa_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", system_prompt),
@@ -118,6 +119,23 @@ if api_key:
                 ("user","{input}")
             ]
         )
+
+        """
+        Overall Workflow
+
+        1. Reformulation (Standalone Query Creation):
+
+        The user's question is analyzed with chat history.
+        If needed, it is reformulated into a standalone question.
+
+        2. Retrieval (Finding Context):
+
+        A history-aware retriever fetches relevant pieces of context based on the standalone query.
+        
+        3. Answering:
+
+        The assistant uses the retrieved context to generate a concise and accurate answer.
+        """
 
         question_answer_chain=create_stuff_documents_chain(llm,qa_prompt)
         rag_chain=create_retrieval_chain(history_aware_retriever,question_answer_chain)
