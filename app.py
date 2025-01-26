@@ -120,22 +120,22 @@ if api_key:
             ]
         )
 
-        """
-        Overall Workflow
+      #  """
+      #  Overall Workflow
 
-        1. Reformulation (Standalone Query Creation):
+      #  1. Reformulation (Standalone Query Creation):
 
-        The user's question is analyzed with chat history.
-        If needed, it is reformulated into a standalone question.
+      #  The user's question is analyzed with chat history.
+      #  If needed, it is reformulated into a standalone question.
 
-        2. Retrieval (Finding Context):
+      #  2. Retrieval (Finding Context):
 
-        A history-aware retriever fetches relevant pieces of context based on the standalone query.
+      #  A history-aware retriever fetches relevant pieces of context based on the standalone query.
         
-        3. Answering:
+      #  3. Answering:
 
-        The assistant uses the retrieved context to generate a concise and accurate answer.
-        """
+      #  The assistant uses the retrieved context to generate a concise and accurate answer.
+      #  """
 
         question_answer_chain=create_stuff_documents_chain(llm,qa_prompt)
         rag_chain=create_retrieval_chain(history_aware_retriever,question_answer_chain)
