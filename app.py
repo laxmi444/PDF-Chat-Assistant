@@ -140,7 +140,7 @@ if api_key:
         question_answer_chain=create_stuff_documents_chain(llm,qa_prompt)
         rag_chain=create_retrieval_chain(history_aware_retriever,question_answer_chain)
 
-        def get_session_history(session:str)->BaseChatMessageHistory:
+        def get_session_history(session:str)->BaseChatMessageHistory: # -> BaseChatMessageHistory: The function returns an object of type BaseChatMessageHistory
             if session_id not in st.session_state.store:
                 st.session_state.store[session_id]=ChatMessageHistory()
             return st.session_state.store[session_id]
@@ -148,7 +148,7 @@ if api_key:
         conversational_rag_chain=RunnableWithMessageHistory(
             rag_chain,get_session_history,
             input_message_key="input",
-            history_messages_key="chat_history",
+            history_messages_key="chat_history", #specifies that the users input will be accessed through the key "input"
             output_messages_key="answer" 
         )
         user_input=st.text_input("Your question:")
@@ -158,7 +158,7 @@ if api_key:
                 {"input":user_input},
                 config={
                     "configurable":{"session_id":session_id}
-                    #constructs a key "abcd123 in "store"
+                    #constructs a key in "store"
                 },
             )
             st.write(st.session_state.store)
